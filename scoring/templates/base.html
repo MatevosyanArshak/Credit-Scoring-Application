@@ -1,0 +1,16 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Credit Scoring{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}?v=1.1">
+</head>
+<body>
+    <div id="head">Վարկունակության գնահատում</div>
+    <div class="block">
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>

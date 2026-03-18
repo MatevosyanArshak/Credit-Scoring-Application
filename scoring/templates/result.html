@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}Application Result{% endblock %}
+
+{% block content %}
+<div class="title msg">
+    <p>{{ msg }}</p>
+</div>
+<div class="first">
+    <a href="{% url 'application_form' %}" class="button">Նոր վարկային հայտ</a>
+    <a href="{% url 'accepted_applications' %}" class="button">Բավարարված հայտեր</a>
+    <a href="{% url 'rejected_applications' %}" class="button">Մերժված հայտեր</a>
+</div>
+{% endblock %}

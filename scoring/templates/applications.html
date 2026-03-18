@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="title">{{ title }}</div>
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th>Անուն</th>
+                <th>Ազգանուն</th>
+                <th>Վարկառուի Տարիք</th>
+                <th>Վարկի Արժեք</th>
+                <th>Դեֆոլտի հավանականություն</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for application in applications %}
+            <tr>
+                <td>{{ application.first_name }}</td>
+                <td>{{ application.last_name }}</td>
+                <td>{{ application.age }}</td>
+                <td>{{ application.loan_amount }}</td>
+                <td>{{ application.prob_default|floatformat:10 }}</td>
+                <td><a href="{% url 'delete_application' application.pk %}" class="button">Delete</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<div class="first">
+    <a href="{% url 'application_form' %}" class="button">Նոր վարկային հայտ</a>
+    <a href="{% url 'accepted_applications' %}" class="button">Բավարարված հայտեր</a>
+    <a href="{% url 'rejected_applications' %}" class="button">Մերժված հայտեր</a>
+</div>
+{% endblock %}
