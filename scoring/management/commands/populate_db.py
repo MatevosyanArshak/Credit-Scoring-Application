@@ -1,15 +1,15 @@
 import random
 from django.core.management.base import BaseCommand
-from scoring.models import Application
+from scoring.models import TrainingData
 
 class Command(BaseCommand):
-    help = 'Populates the database with a more realistic, balanced set of sample applications'
+    help = 'Populates the database with a more realistic, balanced set of sample training data'
 
     def handle(self, *args, **options):
-        self.stdout.write('Clearing existing data...')
-        Application.objects.all().delete()
+        self.stdout.write('Clearing existing training data...')
+        TrainingData.objects.all().delete()
 
-        self.stdout.write('Populating database with more realistic data...')
+        self.stdout.write('Populating database with new training data...')
         
         statuses = ['Accepted'] * 50 + ['Rejected'] * 50
         random.shuffle(statuses)
@@ -27,10 +27,7 @@ class Command(BaseCommand):
                 credit_history = random.randint(1, 4) # Can have decent history
                 loan_amount = random.randint(500000, 12000000)
 
-            application = Application(
-                first_name=f'FirstName{random.randint(1, 1000)}',
-                last_name=f'LastName{random.randint(1, 1000)}',
-                father_name=f'FatherName{random.randint(1, 1000)}',
+            training_instance = TrainingData(
                 age=random.randint(18, 70),
                 sex=random.choice(['male', 'female']),
                 family_members=random.randint(0, 10),
@@ -40,10 +37,8 @@ class Command(BaseCommand):
                 loan_term=random.randint(1, 5),
                 loan_amount=loan_amount,
                 mortgage_type=random.randint(1, 3),
-                prob_default=random.random(), # This will be recalculated on prediction
-                status=status,
-                is_training_data=True
+                status=status
             )
-            application.save()
+            training_instance.save()
             
-        self.stdout.write(self.style.SUCCESS('Successfully populated database with 100 more realistic applications.'))
+        self.stdout.write(self.style.SUCCESS('Successfully populated the TrainingData table with 100 new instances.'))

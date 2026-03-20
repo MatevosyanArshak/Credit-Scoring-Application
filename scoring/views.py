@@ -1,7 +1,8 @@
 import pickle
 import pandas as pd
 from django.shortcuts import render, redirect
-from .models import Application
+from django.db.models import Sum
+from .models import Application, TrainingData
 
 # Load the trained model
 with open('model.pkl', 'rb') as f:
@@ -47,34 +48,61 @@ def application_form(request):
                 mortgage_type=int(request.POST['mortgage']),
             )
             
+            # --- Budget and Profitability Logic ---
+            BANK_BUDGET = 20000000
+            BASE_INTEREST_RATE = 0.05  # 5%
+            RISK_PREMIUM_FACTOR = 0.20 # 20% - higher factor means more penalty for risk
+
+            # 1. Calculate total amount of currently accepted loans
+            total_accepted_loans = Application.objects.filter(status='Accepted').aggregate(Sum('loan_amount'))['loan_amount__sum'] or 0
+
+            # 2. Check if the new loan exceeds the budget
+            if total_accepted_loans + application.loan_amount > BANK_BUDGET:
+                application.status = 'Rejected'
+                application.prob_default = predict_default(application) # Predict for info purposes
+                application.save()
+                msg = f"Application Rejected: Not enough budget remaining. (Available: {BANK_BUDGET - total_accepted_loans})"
+                return render(request, 'result.html', {'msg': msg})
+
+            # 3. Calculate profitability
             prob_default = predict_default(application)
             application.prob_default = prob_default
-            
-            if prob_default >= 0.5: # Using 0.5 as the threshold for the trained model
-                application.status = 'Rejected'
-                msg = 'Application Rejected'
-            else:
+
+            interest_rate = BASE_INTEREST_RATE + (prob_default * RISK_PREMIUM_FACTOR)
+            expected_return = application.loan_amount * interest_rate
+            expected_loss = application.loan_amount * prob_default
+            expected_profit = expected_return - expected_loss
+
+            # 4. Make a decision based on profitability
+            if expected_profit > 0:
                 application.status = 'Accepted'
-                msg = 'Application Accepted'
-                
+                msg = f"Application Accepted! (Expected Profit: {expected_profit:.2f})"
+            else:
+                application.status = 'Rejected'
+                msg = f"Application Rejected: Not profitable enough. (Expected Profit: {expected_profit:.2f})"
+            
             application.save()
             
             return render(request, 'result.html', {'msg': msg})
+
         except ValueError:
-            return render(request, 'form.html', {'error': 'Please fill in all fields'})
+            return render(request, 'form.html', {'error': 'Please fill in all fields correctly.'})
     
     return render(request, 'form.html')
 
 def accepted_applications(request):
-    applications = Application.objects.filter(status='Accepted', is_training_data=False)
+    applications = Application.objects.filter(status='Accepted')
     return render(request, 'applications.html', {'applications': applications, 'title': 'Accepted Applications'})
 
 def rejected_applications(request):
-    applications = Application.objects.filter(status='Rejected', is_training_data=False)
+    applications = Application.objects.filter(status='Rejected')
     return render(request, 'applications.html', {'applications': applications, 'title': 'Rejected Applications'})
 
 def delete_application(request, pk):
-    application = Application.objects.get(pk=pk)
-    application.delete()
+    try:
+        application = Application.objects.get(pk=pk)
+        application.delete()
+    except Application.DoesNotExist:
+        pass # Or handle the error appropriately
     # Redirect to the previous page
     return redirect(request.META.get('HTTP_REFERER', '/'))
