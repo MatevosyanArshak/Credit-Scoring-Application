@@ -11,13 +11,13 @@
     <div class="first-part">
         <div class="title">Անձնական տվյալներ</div>
         <label for="fname">Անուն</label>
-        <input type="text" id="fname" name="fname">
+        <input type="text" id="fname" name="fname" required>
         <label for="lname">Ազգանուն</label>
-        <input type="text" id="lname" name="lname">
+        <input type="text" id="lname" name="lname" required>
         <label for="faname">Հայրանուն</label>
-        <input type="text" id="faname" name="faname">
+        <input type="text" id="faname" name="faname" required>
         <label for="age">Տարիք</label>
-        <input type="number" id="age" name="age">
+        <input type="number" id="age" name="age" min="18" required>
         <label for="sex">Սեռ</label>
         <select name="sex" id="sex">
             {% for value, label in sex_choices %}
@@ -25,9 +25,9 @@
             {% endfor %}
         </select>
         <label for="family">Ընտանիքի անդամների թիվ</label>
-        <input type="number" id="family" name="family">
+        <input type="number" id="family" name="family" min="1" required>
         <label for="income">Ամսեկան եկամուտ</label>
-        <input type="number" id="income" name="income">
+        <input type="number" id="income" name="income" min="1" required>
         <label for="history">Վարկային պատմություն</label>
         <select name="history" id="history">
             <option value="1">Վատ</option>
@@ -56,7 +56,7 @@
             <option value="5">121 և ավել</option>
         </select>
         <label for="worth">Գումար</label>
-        <input type="number" id="worth" name="worth">
+        <input type="number" id="worth" name="worth" min="1" required>
         <label for="mortgage">Գրավի տեսակ</label>
         <select name="mortgage" id="mortgage">
             <option value="1">Առանց գրավի առկայության</option>

@@ -50,8 +50,15 @@ def application_form(request):
     if request.method == 'POST':
         try:
             age = int(request.POST['age'])
+            monthly_income = int(request.POST['income'])
+            family_members = int(request.POST['family'])
+
             if age < 18:
                 return render(request, 'form.html', {'error': 'Դիմորդը պետք է լինի 18 տարեկանից բարձր', 'sex_choices': Application.Sex.choices})
+            if monthly_income <= 0:
+                return render(request, 'form.html', {'error': 'Ամսական եկամուտը պետք է լինի 0-ից մեծ', 'sex_choices': Application.Sex.choices})
+            if family_members <= 0:
+                return render(request, 'form.html', {'error': 'Ընտանիքի անդամների թիվը պետք է լինի 0-ից մեծ', 'sex_choices': Application.Sex.choices})
 
             application = Application(
                 first_name=request.POST['fname'],
@@ -59,8 +66,8 @@ def application_form(request):
                 father_name=request.POST['faname'],
                 age=age,
                 sex=request.POST['sex'],
-                family_members=int(request.POST['family']),
-                monthly_income=int(request.POST['income']),
+                family_members=family_members,
+                monthly_income=monthly_income,
                 credit_history=int(request.POST['history']),
                 loan_type=int(request.POST['type']),
                 loan_term=int(request.POST['service']),
