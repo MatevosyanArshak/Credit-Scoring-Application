@@ -122,3 +122,8 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Credit Scoring Application Settings
+BANK_BUDGET = 20000000
+BASE_INTEREST_RATE = 0.05  # 5%
+RISK_PREMIUM_FACTOR = 0.20 # 20% - higher factor means more penalty for risk

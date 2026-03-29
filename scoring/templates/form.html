@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Application Form{% endblock %}
+{% block title %}Դիմումի ձև{% endblock %}
 
 {% block content %}
 {% if error %}
@@ -20,8 +20,9 @@
         <input type="number" id="age" name="age">
         <label for="sex">Սեռ</label>
         <select name="sex" id="sex">
-            <option value="male">Male</option>
-            <option value="female">Female</option>
+            {% for value, label in sex_choices %}
+            <option value="{{ value }}">{% if value == 'Male' %}Արական{% else %}Իգական{% endif %}</option>
+            {% endfor %}
         </select>
         <label for="family">Ընտանիքի անդամների թիվ</label>
         <input type="number" id="family" name="family">
@@ -43,7 +44,6 @@
             <option value="1">Հիփոթեքային վարկ</option>
             <option value="2">Ավտոմեքենայի ձեռք բերման վարկ</option>
             <option value="3">Սպառողական վարկ</option>
-            <option value="4">Ոսկու գրավով վարկ</option>
             <option value="5">Ապառիկ վարկ</option>
             <option value="6">Տան վերանորոգման վարկ</option>
         </select>
@@ -64,10 +64,11 @@
             <option value="3">Անշարժ գույքի գրավով</option>
         </select>
     </div>
-    <input type="submit" value="Submit" class="button">
+    <input type="submit" value="Ուղարկել" class="button">
 </form>
 <div class="first">
     <a href="{% url 'accepted_applications' %}" class="button">Բավարարված հայտեր</a>
     <a href="{% url 'rejected_applications' %}" class="button">Մերժված հայտեր</a>
+    <a href="{% url 'pending_applications' %}" class="button">Սպասվող հայտեր</a>
 </div>
 {% endblock %}

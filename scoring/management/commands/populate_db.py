@@ -12,6 +12,7 @@ class Command(BaseCommand):
         self.stdout.write('Populating database with new training data...')
         
         statuses = ['Accepted'] * 50 + ['Rejected'] * 50
+'Accepted'] * 50 + ['Rejected'] * 50
         random.shuffle(statuses)
 
         for status in statuses:
@@ -29,7 +30,7 @@ class Command(BaseCommand):
 
             training_instance = TrainingData(
                 age=random.randint(18, 70),
-                sex=random.choice(['male', 'female']),
+                sex=random.choice(['male', 'female'                sex=random.choice(['male', 'female']),
                 family_members=random.randint(0, 10),
                 monthly_income=monthly_income,
                 credit_history=credit_history,

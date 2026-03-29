@@ -26,7 +26,7 @@
                 <td>{{ application.age }}</td>
                 <td>{{ application.loan_amount }}</td>
                 <td>{{ application.prob_default|floatformat:10 }}</td>
-                <td><a href="{% url 'delete_application' application.pk %}" class="button">Delete</a></td>
+                <td><a href="{% url 'delete_application' application.pk %}" class="button">Ջնջել</a></td>
             </tr>
             {% endfor %}
         </tbody>

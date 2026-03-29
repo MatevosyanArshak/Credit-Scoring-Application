@@ -2,7 +2,8 @@ import pickle
 import pandas as pd
 from django.shortcuts import render, redirect
 from django.db.models import Sum
-from .models import Application, TrainingData
+from .models import Application
+from django.conf import settings
 
 # Load the trained model
 with open('model.pkl', 'rb') as f:
@@ -26,12 +27,31 @@ def predict_default(application):
     prob_default = model.predict_proba(df)[0][1]
     return prob_default
 
+def process_pending_applications():
+    pending_applications = Application.objects.filter(status=Application.ApplicationStatus.PENDING)
+    
+    if pending_applications.count() >= 20:
+        # Sort applications by expected profit in descending order
+        sorted_applications = sorted(pending_applications, key=lambda app: app.expected_profit, reverse=True)
+        
+        # Get the current budget
+        total_accepted_loans = Application.objects.filter(status=Application.ApplicationStatus.ACCEPTED).aggregate(Sum('loan_amount'))['loan_amount__sum'] or 0
+        available_budget = settings.BANK_BUDGET - total_accepted_loans
+        
+        for app in sorted_applications:
+            if app.loan_amount <= available_budget and app.expected_profit > 0:
+                app.status = Application.ApplicationStatus.ACCEPTED
+                available_budget -= app.loan_amount
+            else:
+                app.status = Application.ApplicationStatus.REJECTED
+            app.save()
+
 def application_form(request):
     if request.method == 'POST':
         try:
             age = int(request.POST['age'])
             if age < 18:
-                return render(request, 'form.html', {'error': 'Applicant must be at least 18 years old'})
+                return render(request, 'form.html', {'error': 'Դիմորդը պետք է լինի 18 տարեկանից բարձր', 'sex_choices': Application.Sex.choices})
 
             application = Application(
                 first_name=request.POST['fname'],
@@ -48,61 +68,44 @@ def application_form(request):
                 mortgage_type=int(request.POST['mortgage']),
             )
             
-            # --- Budget and Profitability Logic ---
-            BANK_BUDGET = 20000000
-            BASE_INTEREST_RATE = 0.05  # 5%
-            RISK_PREMIUM_FACTOR = 0.20 # 20% - higher factor means more penalty for risk
-
-            # 1. Calculate total amount of currently accepted loans
-            total_accepted_loans = Application.objects.filter(status='Accepted').aggregate(Sum('loan_amount'))['loan_amount__sum'] or 0
-
-            # 2. Check if the new loan exceeds the budget
-            if total_accepted_loans + application.loan_amount > BANK_BUDGET:
-                application.status = 'Rejected'
-                application.prob_default = predict_default(application) # Predict for info purposes
-                application.save()
-                msg = f"Application Rejected: Not enough budget remaining. (Available: {BANK_BUDGET - total_accepted_loans})"
-                return render(request, 'result.html', {'msg': msg})
-
-            # 3. Calculate profitability
+            # Calculate profitability and save with Pending status
             prob_default = predict_default(application)
             application.prob_default = prob_default
 
-            interest_rate = BASE_INTEREST_RATE + (prob_default * RISK_PREMIUM_FACTOR)
+            interest_rate = settings.BASE_INTEREST_RATE + (prob_default * settings.RISK_PREMIUM_FACTOR)
             expected_return = application.loan_amount * interest_rate
             expected_loss = application.loan_amount * prob_default
             expected_profit = expected_return - expected_loss
-
-            # 4. Make a decision based on profitability
-            if expected_profit > 0:
-                application.status = 'Accepted'
-                msg = f"Application Accepted! (Expected Profit: {expected_profit:.2f})"
-            else:
-                application.status = 'Rejected'
-                msg = f"Application Rejected: Not profitable enough. (Expected Profit: {expected_profit:.2f})"
+            application.expected_profit = expected_profit
             
-            application.save()
+            application.save() # The default status is 'Pending'
             
-            return render(request, 'result.html', {'msg': msg})
+            # Process pending applications if the batch size is reached
+            process_pending_applications()
+            
+            return render(request, 'result.html', {'msg': 'Ձեր հայտը հաջողությամբ ուղարկվել է և գտնվում է դիտարկման մեջ։'})
 
         except ValueError:
-            return render(request, 'form.html', {'error': 'Please fill in all fields correctly.'})
+            return render(request, 'form.html', {'error': 'Խնդրում ենք ճիշտ լրացնել բոլոր դաշտերը։', 'sex_choices': Application.Sex.choices})
     
-    return render(request, 'form.html')
+    return render(request, 'form.html', {'sex_choices': Application.Sex.choices})
 
 def accepted_applications(request):
-    applications = Application.objects.filter(status='Accepted')
-    return render(request, 'applications.html', {'applications': applications, 'title': 'Accepted Applications'})
+    applications = Application.objects.filter(status=Application.ApplicationStatus.ACCEPTED)
+    return render(request, 'applications.html', {'applications': applications, 'title': 'Բավարարված հայտեր'})
 
 def rejected_applications(request):
-    applications = Application.objects.filter(status='Rejected')
-    return render(request, 'applications.html', {'applications': applications, 'title': 'Rejected Applications'})
+    applications = Application.objects.filter(status=Application.ApplicationStatus.REJECTED)
+    return render(request, 'applications.html', {'applications': applications, 'title': 'Մերժված հայտեր'})
+
+def pending_applications(request):
+    applications = Application.objects.filter(status=Application.ApplicationStatus.PENDING)
+    return render(request, 'applications.html', {'applications': applications, 'title': 'Սպասվող հայտեր'})
 
 def delete_application(request, pk):
     try:
         application = Application.objects.get(pk=pk)
         application.delete()
     except Application.DoesNotExist:
-        pass # Or handle the error appropriately
-    # Redirect to the previous page
+        pass
     return redirect(request.META.get('HTTP_REFERER', '/'))
