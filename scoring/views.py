@@ -12,7 +12,7 @@ with open('model.pkl', 'rb') as f:
 def predict_default(application):
     # This list MUST be in the exact same order as in train_model.py
     features_order = [
-        'age', 'family_members', 'monthly_income', 'credit_history',
+        'age', 'sex', 'family_members', 'monthly_income', 'credit_history',
         'loan_type', 'loan_term', 'loan_amount', 'mortgage_type',
         'marital_status', 'education_level', 'employment_type',
         'work_experience_months', 'other_monthly_income',
@@ -23,7 +23,7 @@ def predict_default(application):
     # Prepare the application data for the model
     data = {
         'age': [application.age],
-        'sex': [1 if application.sex == 'Male' else 0],
+        'sex': [1 if application.sex == Application.Sex.MALE else 0],
         'family_members': [application.family_members],
         'monthly_income': [application.monthly_income],
         'credit_history': [application.credit_history],
@@ -97,13 +97,6 @@ def application_form(request):
             # Handle 'Other' loan purpose
             loan_purpose = request.POST['loan_purpose']
             if loan_purpose == LoanPurpose.OTHER:
-                loan_purpose_text = request.POST.get('loan_purpose_other', '').strip()
-                if not loan_purpose_text:
-                    context['error'] = '«Այլ» նպատակի դեպքում անհրաժեշտ է լրացնել համապատասխան դաշտը։'
-                    return render(request, 'form.html', context)
-                # We can save the custom text, but for the model, we still use the 'Other' category
-                # For simplicity, we'll just save the 'Other' value. A more advanced implementation
-                # could save the text in a separate field.
                 loan_purpose = LoanPurpose.OTHER
 
             application = Application(
