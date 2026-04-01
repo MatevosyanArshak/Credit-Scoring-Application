@@ -82,14 +82,14 @@
             <option value="6">Տան վերանորոգման վարկ</option>
         </select>
         <label for="loan_purpose">Վարկի նպատակ</label>
-        <select name="loan_purpose" id="loan_purpose">
+        <select name="loan_purpose" id="loan_purpose" onchange="checkLoanPurpose(this)">
             {% for value, label in loan_purpose_choices %}
             <option value="{{ value }}">{{ label }}</option>
             {% endfor %}
         </select>
-        <div id="loan_purpose_other_div" style="display: none;">
-            <label for="loan_purpose_other">Նշեք այլ նպատակը</label>
-            <input type="text" id="loan_purpose_other" name="loan_purpose_other" maxlength="100">
+        <div id="loan_purpose_other_container" style="display: none;">
+            <label for="loan_purpose_other">Նշեք այլ նպատակ</label>
+            <input type="text" id="loan_purpose_other" name="loan_purpose_other">
         </div>
         <label for="service">Սպասարկման ժամկետ</label>
         <select name="service" id="service">
@@ -119,26 +119,13 @@
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const loanPurposeSelect = document.getElementById('loan_purpose');
-        const loanPurposeOtherDiv = document.getElementById('loan_purpose_other_div');
-        const loanPurposeOtherInput = document.getElementById('loan_purpose_other');
-
-        function toggleLoanPurposeOther() {
-            if (loanPurposeSelect.value === 'Other') {
-                loanPurposeOtherDiv.style.display = 'block';
-                loanPurposeOtherInput.setAttribute('required', 'required');
-            } else {
-                loanPurposeOtherDiv.style.display = 'none';
-                loanPurposeOtherInput.removeAttribute('required');
-                loanPurposeOtherInput.value = ''; // Clear value when hidden
-            }
-        }
-
-        loanPurposeSelect.addEventListener('change', toggleLoanPurposeOther);
-
-        // Initial check in case "Other" is pre-selected (e.g., after form submission with error)
-        toggleLoanPurposeOther();
-    });
+function checkLoanPurpose(select) {
+    const otherContainer = document.getElementById('loan_purpose_other_container');
+    if (select.value === 'Other') {
+        otherContainer.style.display = 'block';
+    } else {
+        otherContainer.style.display = 'none';
+    }
+}
 </script>
 {% endblock %}
