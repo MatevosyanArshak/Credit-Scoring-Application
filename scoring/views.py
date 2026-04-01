@@ -10,9 +10,20 @@ with open('model.pkl', 'rb') as f:
     model = pickle.load(f)
 
 def predict_default(application):
+    # This list MUST be in the exact same order as in train_model.py
+    features_order = [
+        'age', 'family_members', 'monthly_income', 'credit_history',
+        'loan_type', 'loan_term', 'loan_amount', 'mortgage_type',
+        'marital_status', 'education_level', 'employment_type',
+        'work_experience_months', 'other_monthly_income',
+        'existing_loans_amount', 'existing_monthly_payments',
+        'monthly_expenses', 'loan_purpose', 'has_guarantor'
+    ]
+
     # Prepare the application data for the model
     data = {
         'age': [application.age],
+        'sex': [1 if application.sex == 'Male' else 0],
         'family_members': [application.family_members],
         'monthly_income': [application.monthly_income],
         'credit_history': [application.credit_history],
@@ -20,18 +31,22 @@ def predict_default(application):
         'loan_term': [application.loan_term],
         'loan_amount': [application.loan_amount],
         'mortgage_type': [application.mortgage_type],
-        'marital_status': [MaritalStatus.choices.index((application.marital_status, application.get_marital_status_display()))],
-        'education_level': [EducationLevel.choices.index((application.education_level, application.get_education_level_display()))],
-        'employment_type': [EmploymentType.choices.index((application.employment_type, application.get_employment_type_display()))],
+        # CORRECTED ENCODING: Match the logic from train_model.py
+        'marital_status': [[c[0] for c in MaritalStatus.choices].index(application.marital_status)],
+        'education_level': [[c[0] for c in EducationLevel.choices].index(application.education_level)],
+        'employment_type': [[c[0] for c in EmploymentType.choices].index(application.employment_type)],
         'work_experience_months': [application.work_experience_months],
         'other_monthly_income': [application.other_monthly_income],
         'existing_loans_amount': [application.existing_loans_amount],
         'existing_monthly_payments': [application.existing_monthly_payments],
         'monthly_expenses': [application.monthly_expenses],
-        'loan_purpose': [LoanPurpose.choices.index((application.loan_purpose, application.get_loan_purpose_display()))],
+        'loan_purpose': [[c[0] for c in LoanPurpose.choices].index(application.loan_purpose)],
         'has_guarantor': [1 if application.has_guarantor else 0],
     }
     df = pd.DataFrame(data)
+
+    # Enforce the correct feature order
+    df = df[features_order]
 
     # Make a prediction
     prob_default = model.predict_proba(df)[0][1]
@@ -102,6 +117,7 @@ def application_form(request):
                 existing_monthly_payments=int(request.POST.get('existing_monthly_payments', 0)),
                 monthly_expenses=int(request.POST['monthly_expenses']),
                 loan_purpose=request.POST['loan_purpose'],
+                loan_purpose_other=request.POST.get('loan_purpose_other', None),
                 has_guarantor='has_guarantor' in request.POST,
             )
             
@@ -122,8 +138,8 @@ def application_form(request):
             
             return render(request, 'result.html', {'msg': 'Ձեր հայտը հաջողությամբ ուղարկվել է և գտնվում է դիտարկման մեջ։'})
 
-        except ValueError:
-            context['error'] = 'Խնդրում ենք ճիշտ լրացնել բոլոր դաշտերը։'
+        except (ValueError, KeyError) as e:
+            context['error'] = f'Խնդրում ենք ճիշտ լրացնել բոլոր դաշտերը։ Սխալի մանրամասներ: {e}'
             return render(request, 'form.html', context)
     
     return render(request, 'form.html', context)

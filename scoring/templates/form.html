@@ -87,6 +87,10 @@
             <option value="{{ value }}">{{ label }}</option>
             {% endfor %}
         </select>
+        <div id="loan_purpose_other_div" style="display: none;">
+            <label for="loan_purpose_other">Նշեք այլ նպատակը</label>
+            <input type="text" id="loan_purpose_other" name="loan_purpose_other" maxlength="100">
+        </div>
         <label for="service">Սպասարկման ժամկետ</label>
         <select name="service" id="service">
             <option value="1">Մինչև 18 ամիս</option>
@@ -113,4 +117,28 @@
     <a href="{% url 'rejected_applications' %}" class="button">Մերժված հայտեր</a>
     <a href="{% url 'pending_applications' %}" class="button">Սպասվող հայտեր</a>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const loanPurposeSelect = document.getElementById('loan_purpose');
+        const loanPurposeOtherDiv = document.getElementById('loan_purpose_other_div');
+        const loanPurposeOtherInput = document.getElementById('loan_purpose_other');
+
+        function toggleLoanPurposeOther() {
+            if (loanPurposeSelect.value === 'Other') {
+                loanPurposeOtherDiv.style.display = 'block';
+                loanPurposeOtherInput.setAttribute('required', 'required');
+            } else {
+                loanPurposeOtherDiv.style.display = 'none';
+                loanPurposeOtherInput.removeAttribute('required');
+                loanPurposeOtherInput.value = ''; // Clear value when hidden
+            }
+        }
+
+        loanPurposeSelect.addEventListener('change', toggleLoanPurposeOther);
+
+        // Initial check in case "Other" is pre-selected (e.g., after form submission with error)
+        toggleLoanPurposeOther();
+    });
+</script>
 {% endblock %}

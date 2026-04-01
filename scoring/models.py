@@ -29,6 +29,7 @@ class LoanPurpose(models.TextChoices):
     BUSINESS = 'Business', _('Բիզնես')
     STUDENT_LOAN = 'Student Loan', _('Ուսանողական վարկ')
     MEDICAL_EXPENSES = 'Medical Expenses', _('Բժշկական ծախսեր')
+    OTHER = 'Other', _('Այլ')
 
 
 class Application(models.Model):
