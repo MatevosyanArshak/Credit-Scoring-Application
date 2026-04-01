@@ -24,10 +24,44 @@
             <option value="{{ value }}">{% if value == 'Male' %}Արական{% else %}Իգական{% endif %}</option>
             {% endfor %}
         </select>
+        <label for="marital_status">Ընտանեկան կարգավիճակ</label>
+        <select name="marital_status" id="marital_status">
+            {% for value, label in marital_status_choices %}
+            <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+        </select>
         <label for="family">Ընտանիքի անդամների թիվ</label>
         <input type="number" id="family" name="family" min="1" required>
+        <label for="education_level">Կրթություն</label>
+        <select name="education_level" id="education_level">
+            {% for value, label in education_level_choices %}
+            <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="second">
+        <div class="title">Աշխատանքային տվյալներ</div>
+        <label for="employment_type">Զբաղվածության տեսակ</label>
+        <select name="employment_type" id="employment_type">
+            {% for value, label in employment_type_choices %}
+            <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+        </select>
+        <label for="work_experience_months">Աշխատանքային փորձ (ամիսներ)</label>
+        <input type="number" id="work_experience_months" name="work_experience_months" min="0" required>
         <label for="income">Ամսեկան եկամուտ</label>
         <input type="number" id="income" name="income" min="1" required>
+        <label for="other_monthly_income">Այլ ամսական եկամուտ</label>
+        <input type="number" id="other_monthly_income" name="other_monthly_income" min="0" value="0" required>
+    </div>
+    <div class="first-part">
+        <div class="title">Ֆինանսական տվյալներ</div>
+        <label for="existing_loans_amount">Ընթացիկ վարկերի գումար</label>
+        <input type="number" id="existing_loans_amount" name="existing_loans_amount" min="0" value="0" required>
+        <label for="existing_monthly_payments">Ընթացիկ ամսական վճարումներ</label>
+        <input type="number" id="existing_monthly_payments" name="existing_monthly_payments" min="0" value="0" required>
+        <label for="monthly_expenses">Ամսական ծախսեր</label>
+        <input type="number" id="monthly_expenses" name="monthly_expenses" min="0" required>
         <label for="history">Վարկային պատմություն</label>
         <select name="history" id="history">
             <option value="1">Վատ</option>
@@ -47,6 +81,12 @@
             <option value="5">Ապառիկ վարկ</option>
             <option value="6">Տան վերանորոգման վարկ</option>
         </select>
+        <label for="loan_purpose">Վարկի նպատակ</label>
+        <select name="loan_purpose" id="loan_purpose">
+            {% for value, label in loan_purpose_choices %}
+            <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+        </select>
         <label for="service">Սպասարկման ժամկետ</label>
         <select name="service" id="service">
             <option value="1">Մինչև 18 ամիս</option>
@@ -63,6 +103,8 @@
             <option value="2">Մեքենայի գրավով</option>
             <option value="3">Անշարժ գույքի գրավով</option>
         </select>
+        <label for="has_guarantor">Երաշխավոր</label>
+        <input type="checkbox" id="has_guarantor" name="has_guarantor">
     </div>
     <input type="submit" value="Ուղարկել" class="button">
 </form>

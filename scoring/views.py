@@ -2,7 +2,7 @@ import pickle
 import pandas as pd
 from django.shortcuts import render, redirect
 from django.db.models import Sum
-from .models import Application
+from .models import Application, MaritalStatus, EducationLevel, EmploymentType, LoanPurpose
 from django.conf import settings
 
 # Load the trained model
@@ -19,7 +19,17 @@ def predict_default(application):
         'loan_type': [application.loan_type],
         'loan_term': [application.loan_term],
         'loan_amount': [application.loan_amount],
-        'mortgage_type': [application.mortgage_type]
+        'mortgage_type': [application.mortgage_type],
+        'marital_status': [MaritalStatus.choices.index((application.marital_status, application.get_marital_status_display()))],
+        'education_level': [EducationLevel.choices.index((application.education_level, application.get_education_level_display()))],
+        'employment_type': [EmploymentType.choices.index((application.employment_type, application.get_employment_type_display()))],
+        'work_experience_months': [application.work_experience_months],
+        'other_monthly_income': [application.other_monthly_income],
+        'existing_loans_amount': [application.existing_loans_amount],
+        'existing_monthly_payments': [application.existing_monthly_payments],
+        'monthly_expenses': [application.monthly_expenses],
+        'loan_purpose': [LoanPurpose.choices.index((application.loan_purpose, application.get_loan_purpose_display()))],
+        'has_guarantor': [1 if application.has_guarantor else 0],
     }
     df = pd.DataFrame(data)
 
@@ -47,6 +57,13 @@ def process_pending_applications():
             app.save()
 
 def application_form(request):
+    context = {
+        'sex_choices': Application.Sex.choices,
+        'marital_status_choices': MaritalStatus.choices,
+        'education_level_choices': EducationLevel.choices,
+        'employment_type_choices': EmploymentType.choices,
+        'loan_purpose_choices': LoanPurpose.choices,
+    }
     if request.method == 'POST':
         try:
             age = int(request.POST['age'])
@@ -54,11 +71,14 @@ def application_form(request):
             family_members = int(request.POST['family'])
 
             if age < 18:
-                return render(request, 'form.html', {'error': 'Դիմորդը պետք է լինի 18 տարեկանից բարձր', 'sex_choices': Application.Sex.choices})
+                context['error'] = 'Դիմորդը պետք է լինի 18 տարեկանից բարձր'
+                return render(request, 'form.html', context)
             if monthly_income <= 0:
-                return render(request, 'form.html', {'error': 'Ամսական եկամուտը պետք է լինի 0-ից մեծ', 'sex_choices': Application.Sex.choices})
+                context['error'] = 'Ամսական եկամուտը պետք է լինի 0-ից մեծ'
+                return render(request, 'form.html', context)
             if family_members <= 0:
-                return render(request, 'form.html', {'error': 'Ընտանիքի անդամների թիվը պետք է լինի 0-ից մեծ', 'sex_choices': Application.Sex.choices})
+                context['error'] = 'Ընտանիքի անդամների թիվը պետք է լինի 0-ից մեծ'
+                return render(request, 'form.html', context)
 
             application = Application(
                 first_name=request.POST['fname'],
@@ -73,6 +93,16 @@ def application_form(request):
                 loan_term=int(request.POST['service']),
                 loan_amount=int(request.POST['worth']),
                 mortgage_type=int(request.POST['mortgage']),
+                marital_status=request.POST['marital_status'],
+                education_level=request.POST['education_level'],
+                employment_type=request.POST['employment_type'],
+                work_experience_months=int(request.POST['work_experience_months']),
+                other_monthly_income=int(request.POST.get('other_monthly_income', 0)),
+                existing_loans_amount=int(request.POST.get('existing_loans_amount', 0)),
+                existing_monthly_payments=int(request.POST.get('existing_monthly_payments', 0)),
+                monthly_expenses=int(request.POST['monthly_expenses']),
+                loan_purpose=request.POST['loan_purpose'],
+                has_guarantor='has_guarantor' in request.POST,
             )
             
             # Calculate profitability and save with Pending status
@@ -93,9 +123,10 @@ def application_form(request):
             return render(request, 'result.html', {'msg': 'Ձեր հայտը հաջողությամբ ուղարկվել է և գտնվում է դիտարկման մեջ։'})
 
         except ValueError:
-            return render(request, 'form.html', {'error': 'Խնդրում ենք ճիշտ լրացնել բոլոր դաշտերը։', 'sex_choices': Application.Sex.choices})
+            context['error'] = 'Խնդրում ենք ճիշտ լրացնել բոլոր դաշտերը։'
+            return render(request, 'form.html', context)
     
-    return render(request, 'form.html', {'sex_choices': Application.Sex.choices})
+    return render(request, 'form.html', context)
 
 def accepted_applications(request):
     applications = Application.objects.filter(status=Application.ApplicationStatus.ACCEPTED)
