@@ -82,15 +82,11 @@
             <option value="6">Տան վերանորոգման վարկ</option>
         </select>
         <label for="loan_purpose">Վարկի նպատակ</label>
-        <select name="loan_purpose" id="loan_purpose" onchange="checkLoanPurpose(this)">
+        <select name="loan_purpose" id="loan_purpose">
             {% for value, label in loan_purpose_choices %}
             <option value="{{ value }}">{{ label }}</option>
             {% endfor %}
         </select>
-        <div id="loan_purpose_other_container" style="display: none;">
-            <label for="loan_purpose_other">Նշեք այլ նպատակ</label>
-            <input type="text" id="loan_purpose_other" name="loan_purpose_other">
-        </div>
         <label for="service">Սպասարկման ժամկետ</label>
         <select name="service" id="service">
             <option value="1">Մինչև 18 ամիս</option>
@@ -117,15 +113,4 @@
     <a href="{% url 'rejected_applications' %}" class="button">Մերժված հայտեր</a>
     <a href="{% url 'pending_applications' %}" class="button">Սպասվող հայտեր</a>
 </div>
-
-<script>
-function checkLoanPurpose(select) {
-    const otherContainer = document.getElementById('loan_purpose_other_container');
-    if (select.value === 'Other') {
-        otherContainer.style.display = 'block';
-    } else {
-        otherContainer.style.display = 'none';
-    }
-}
-</script>
 {% endblock %}
