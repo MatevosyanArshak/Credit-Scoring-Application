@@ -1,99 +1,95 @@
 # Credit Scoring Application
 
-This is a Django-based web application for credit scoring. It uses a pre-trained Logistic Regression model to predict the probability of default for a loan application.
+Django-based credit scoring app that predicts `prob_default` (probability of default) for each submitted loan application.
 
 ## Features
 
-- **Web-based Interface**: A user-friendly web form for submitting loan applications.
-- **Pre-trained Machine Learning Model**: Comes with a `model.pkl` file, so no training is needed for standard use.
-- **Database Integration**: Stores all applications in a database.
-- **Application Management**: Allows for viewing and deleting accepted and rejected applications.
-- **Optional Model Training**: Includes management commands for developers who wish to retrain or improve the model.
+- Web form for creating loan applications
+- Logistic Regression model stored in `model.pkl`
+- SQLite storage for applications and synthetic training data
+- Views for accepted/rejected/pending applications
+- Batch decisioning using risk threshold + budget + expected profit
 
-## Quick Start (Running the Application)
+## Quick Start
 
-Follow these steps to get the application up and running on your local machine.
-
-### 1. Prerequisites
-
-- Ensure you have Python installed.
-- Make sure the `model.pkl` file is in the root project directory.
-
-### 2. Clone the Repository
-
-First, clone the repository to your local machine:
+### 1) Create and activate a virtual environment
 
 ```bash
-git clone <your-repository-url>
-cd <your-project-directory>
-```
-
-### 3. Create and Activate a Virtual Environment
-
-It is highly recommended to use a virtual environment to manage the project's dependencies.
-
-```bash
-# Create a virtual environment
 python -m venv venv
-
-# Activate the virtual environment
-# On Windows
-venv\\Scripts\\activate
-# On macOS/Linux
 source venv/bin/activate
 ```
 
-### 4. Install Dependencies
-
-Install all the required packages using the `requirements.txt` file:
+### 2) Install dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 5. Apply Database Migrations
-
-Run the following command to apply the database migrations and create the necessary tables:
+### 3) Apply migrations
 
 ```bash
 python manage.py migrate
 ```
 
-### 6. Run the Development Server
+### 4) Ensure model exists
 
-Finally, start the Django development server:
+If `model.pkl` is missing (or stale after schema/form changes), retrain it:
+
+```bash
+python manage.py populate_db
+python manage.py train_model
+```
+
+### 5) Run server
 
 ```bash
 python manage.py runserver
 ```
 
-The application will now be running at `http://127.0.0.1:8000/`.
+Open `http://127.0.0.1:8000/`.
 
-## How to Use
+## Probability and Approval Logic
 
-1.  **Submit an Application**: Open your web browser and navigate to `http://127.0.0.1:8000/`. Fill out the application form and click "Submit."
-2.  **View Results**: After submitting, you will be taken to a results page showing whether the application was accepted or rejected.
-3.  **View Application Lists**: From the main page, you can click on "Accepted Applications" or "Rejected Applications" to view the lists of all submitted applications.
-4.  **Delete Applications**: In the application lists, you can click the "Delete" button to remove an application.
+- `prob_default` means **risk of default** (lower is better)
+- Model output is clamped to `[1e-9, 0.99]` in `scoring/views.py`
+- Hard risk cutoff is `MAX_DEFAULT_RATE = 0.30` in `credit_scoring/settings.py`
+  - `prob_default >= 0.30` -> rejected
+  - below that threshold -> may be accepted if budget allows and expected profit is positive
+- Batch decisioning is triggered in `process_pending_applications()` when pending applications reach 20
 
----
+## Retraining After Form/Schema Changes
 
-## For Developers: Retraining the Model (Optional)
+When you change input fields (for example, removing `loan_purpose`), retrain so inference matches training features.
 
-If you want to modify the model or retrain it on new data, follow these steps.
-
-### 1. Populate the Database with New Data
-
-To generate a new set of sample data for training, run the following management command. This will delete all existing data.
+### Recommended reset flow
 
 ```bash
+rm -f model.pkl
+rm -f db.sqlite3
+python manage.py migrate
 python manage.py populate_db
-```
-
-### 2. Train the Model
-
-Train the Logistic Regression model on the newly generated data. This will overwrite the existing `model.pkl` file.
-
-```bash
 python manage.py train_model
 ```
+
+Then restart the server and submit new applications.
+
+## Management Commands
+
+- `python manage.py populate_db`  
+  Recreates synthetic rows in `TrainingData`.
+- `python manage.py train_model`  
+  Trains Logistic Regression and overwrites `model.pkl`.
+- `python manage.py clean_applications`  
+  Removes legacy generated application rows matching old naming pattern.
+- `python manage.py update_probabilities`  
+  Recomputes stored probabilities for existing applications. Use with caution: keep this command aligned with `scoring/views.py` feature engineering and thresholds.
+
+## Notes for Developers
+
+- Keep feature order in `scoring/views.py::predict_default()` and `scoring/management/commands/train_model.py` identical.
+- If you add/remove fields in `Application` or `TrainingData`, update:
+  - form template (`scoring/templates/form.html`)
+  - request parsing in `scoring/views.py`
+  - training preprocessing in `train_model.py`
+  - migrations
+

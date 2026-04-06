@@ -125,5 +125,15 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Credit Scoring Application Settings
 BANK_BUDGET = 20000000
-BASE_INTEREST_RATE = 0.05  # 5%
-RISK_PREMIUM_FACTOR = 0.20 # 20% - higher factor means more penalty for risk
+BASE_INTEREST_RATE = 0.05   # 5% annual interest rate
+RISK_PREMIUM_FACTOR = 0.20  # extra rate added per unit of default probability
+MAX_DEFAULT_RATE = 0.30     # hard cap: reject any application with prob_default >= this
+
+# Maps loan_term DB values to approximate years (used for expected profit calculation)
+LOAN_TERM_YEARS = {
+    1: 1.5,   # ≤18 months
+    2: 2.0,   # 19–24 months
+    3: 4.0,   # 25–60 months (avg ~3.5y, rounded up)
+    4: 8.0,   # 61–120 months
+    5: 12.0,  # 121+ months
+}

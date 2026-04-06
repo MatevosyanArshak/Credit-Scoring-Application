@@ -2,7 +2,7 @@ import pickle
 import pandas as pd
 from django.core.management.base import BaseCommand
 from sklearn.linear_model import LogisticRegression
-from scoring.models import TrainingData, MaritalStatus, EducationLevel, EmploymentType, LoanPurpose, Application
+from scoring.models import TrainingData, MaritalStatus, EducationLevel, EmploymentType, Application
 
 class Command(BaseCommand):
     help = 'Trains the Logistic Regression model on the TrainingData table'
@@ -23,14 +23,17 @@ class Command(BaseCommand):
 
         # Convert categorical 'status' to numerical target
         df['status'] = df['status'].apply(lambda x: 1 if x == TrainingData.ApplicationStatus.REJECTED else 0)
-        
+
         # Convert all categorical features to numerical, matching the prediction logic
         df['sex'] = df['sex'].apply(lambda x: 1 if x == Application.Sex.MALE else 0)
         df['marital_status'] = df['marital_status'].apply(lambda x: [c[0] for c in MaritalStatus.choices].index(x))
         df['education_level'] = df['education_level'].apply(lambda x: [c[0] for c in EducationLevel.choices].index(x))
         df['employment_type'] = df['employment_type'].apply(lambda x: [c[0] for c in EmploymentType.choices].index(x))
-        df['loan_purpose'] = df['loan_purpose'].apply(lambda x: [c[0] for c in LoanPurpose.choices].index(x))
         df['has_guarantor'] = df['has_guarantor'].apply(lambda x: 1 if x else 0)
+
+        # Derived ratio features — key for detecting unaffordable loans
+        df['loan_to_income_ratio'] = df['loan_amount'] / df['monthly_income'].replace(0, 1)
+        df['expense_to_income_ratio'] = df['monthly_expenses'] / df['monthly_income'].replace(0, 1)
 
         # This feature list MUST be in the exact same order as in views.py
         features = [
@@ -39,7 +42,8 @@ class Command(BaseCommand):
             'marital_status', 'education_level', 'employment_type',
             'work_experience_months', 'other_monthly_income',
             'existing_loans_amount', 'existing_monthly_payments',
-            'monthly_expenses', 'loan_purpose', 'has_guarantor'
+            'monthly_expenses', 'has_guarantor',
+            'loan_to_income_ratio', 'expense_to_income_ratio',
         ]
 
         X = df[features]
@@ -48,7 +52,7 @@ class Command(BaseCommand):
         # --- End of Critical Data Preparation ---
 
         # Train the model
-        model = LogisticRegression(max_iter=2000, solver='liblinear')
+        model = LogisticRegression(max_iter=5000, solver='liblinear')
         model.fit(X, y)
 
         # Save the trained model to a file

@@ -81,12 +81,6 @@
             <option value="5">Ապառիկ վարկ</option>
             <option value="6">Տան վերանորոգման վարկ</option>
         </select>
-        <label for="loan_purpose">Վարկի նպատակ</label>
-        <select name="loan_purpose" id="loan_purpose">
-            {% for value, label in loan_purpose_choices %}
-            <option value="{{ value }}">{{ label }}</option>
-            {% endfor %}
-        </select>
         <label for="service">Սպասարկման ժամկետ</label>
         <select name="service" id="service">
             <option value="1">Մինչև 18 ամիս</option>
@@ -108,9 +102,4 @@
     </div>
     <input type="submit" value="Ուղարկել" class="button">
 </form>
-<div class="first">
-    <a href="{% url 'accepted_applications' %}" class="button">Բավարարված հայտեր</a>
-    <a href="{% url 'rejected_applications' %}" class="button">Մերժված հայտեր</a>
-    <a href="{% url 'pending_applications' %}" class="button">Սպասվող հայտեր</a>
-</div>
 {% endblock %}
