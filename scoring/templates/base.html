@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="{% static 'style.css' %}?v=1.1">
 </head>
 <body>
-    <div id="head">Վարկունակության գնահատում</div>
+    <a href="{% url 'home' %}" style="text-decoration:none;color:inherit"><div id="head">Վարկունակության գնահատում</div></a>
     <div class="block">
         {% block content %}{% endblock %}
     </div>
