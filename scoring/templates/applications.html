@@ -28,6 +28,7 @@
                 <th>Վարկի Տեսակ</th>
                 <th>Ժամկետ</th>
                 <th>Գրավի Տեսակ</th>
+                <th>Երաշխավոր</th>
                 <th>Դեֆոլտի հավանականություն</th>
                 <th></th>
             </tr>
@@ -45,6 +46,7 @@
                 <td>{{ application.get_loan_type_display_label }}</td>
                 <td>{{ application.get_loan_term_display_label }}</td>
                 <td>{{ application.get_mortgage_type_display_label }}</td>
+                <td>{% if application.has_guarantor %}Այո{% else %}Ոչ{% endif %}</td>
                 <td>{{ application.prob_default|floatformat:10 }}</td>
                 <td><a href="{% url 'delete_application' application.pk %}" class="button">Ջնջել</a></td>
             </tr>
