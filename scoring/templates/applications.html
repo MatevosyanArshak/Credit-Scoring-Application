@@ -23,6 +23,11 @@
                 <th>Ազգանուն</th>
                 <th>Վարկառուի Տարիք</th>
                 <th>Վարկի Արժեք</th>
+                <th>Ամսական Եկամուտ</th>
+                <th>Վարկային Պատմություն</th>
+                <th>Վարկի Տեսակ</th>
+                <th>Ժամկետ</th>
+                <th>Գրավի Տեսակ</th>
                 <th>Դեֆոլտի հավանականություն</th>
                 <th></th>
             </tr>
@@ -35,6 +40,11 @@
                 <td>{{ application.last_name }}</td>
                 <td>{{ application.age }}</td>
                 <td>{{ application.loan_amount }}</td>
+                <td>{{ application.monthly_income }}</td>
+                <td>{{ application.get_credit_history_display_label }}</td>
+                <td>{{ application.get_loan_type_display_label }}</td>
+                <td>{{ application.get_loan_term_display_label }}</td>
+                <td>{{ application.get_mortgage_type_display_label }}</td>
                 <td>{{ application.prob_default|floatformat:10 }}</td>
                 <td><a href="{% url 'delete_application' application.pk %}" class="button">Ջնջել</a></td>
             </tr>

@@ -53,6 +53,41 @@ class Application(models.Model):
     existing_monthly_payments = models.PositiveIntegerField(default=0)
     monthly_expenses = models.PositiveIntegerField(default=0)
     has_guarantor = models.BooleanField(default=False)
+
+    CREDIT_HISTORY_LABELS = {
+        1: 'Վատ',
+        2: 'Ինֆորմացիա չկա',
+        3: 'Միջին',
+        4: 'Լավ',
+        5: 'Գերազանց',
+    }
+    LOAN_TYPE_LABELS = {
+        1: 'Հիփոթեքային վարկ',
+        2: 'Ավտոմեքենայի վարկ',
+        3: 'Սպառողական վարկ',
+        5: 'Ապառիկ վարկ',
+        6: 'Տան վերանորոգման վարկ',
+    }
+    LOAN_TERM_LABELS = {
+        1: 'Մինչև 18 ամիս',
+        2: '19-24',
+        3: '25-60',
+        4: '61-120',
+        5: '121 և ավել',
+    }
+    MORTGAGE_TYPE_LABELS = {
+        1: 'Առանց գրավի',
+        2: 'Մեքենայի գրավով',
+        3: 'Անշառժ գույքի գրավով',
+    }
+    def get_credit_history_display_label(self):
+        return self.CREDIT_HISTORY_LABELS.get(self.credit_history, str(self.credit_history))
+    def get_loan_type_display_label(self):
+        return self.LOAN_TYPE_LABELS.get(self.loan_type, str(self.loan_type))
+    def get_loan_term_display_label(self):
+        return self.LOAN_TERM_LABELS.get(self.loan_term, str(self.loan_term))
+    def get_mortgage_type_display_label(self):
+        return self.MORTGAGE_TYPE_LABELS.get(self.mortgage_type, str(self.mortgage_type))
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
 class TrainingData(models.Model):
