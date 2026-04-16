@@ -23,6 +23,7 @@ class Application(models.Model):
         PENDING = 'Pending', _('Pending')
         ACCEPTED = 'Accepted', _('Accepted')
         REJECTED = 'Rejected', _('Rejected')
+        PORTFOLIO = 'Portfolio', _('Portfolio')
     # Existing Fields
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)

@@ -1,19 +1,37 @@
 {% extends 'base.html' %}
-{% block title %}{{ title }}{% endblock %}
+{% block title %}Օպտիմալ Պորտֆել{% endblock %}
 {% block content %}
-<div class="title">{{ title }}</div>
-{% if page_type == 'accepted' %}
+<h2 class="page-title">Օպտիմալ Պորտֆել</h2>
+
+{% if applications %}
 <div class="stats-panel">
     <div class="stat-item">
-        <span class="stat-label">Ընդհանուր շահույթ</span>
+        <span class="stat-label">Բյուջե</span>
+        <span class="stat-value">{{ budget|floatformat:0 }} ֏</span>
+    </div>
+    <div class="stat-item">
+        <span class="stat-label">Ծախսված</span>
+        <span class="stat-value">{{ total_used|floatformat:0 }} ֏</span>
+    </div>
+    <div class="stat-item">
+        <span class="stat-label">Մնացած</span>
+        <span class="stat-value">{{ remaining_budget|floatformat:0 }} ֏</span>
+    </div>
+    <div class="stat-item">
+        <span class="stat-label">Ընդհ. շահույթ</span>
         <span class="stat-value">{{ total_profit|floatformat:2 }} ֏</span>
     </div>
     <div class="stat-item">
-        <span class="stat-label">Միջին դեֆոլտի հավանականություն</span>
-        <span class="stat-value">{{ mean_default|floatformat:10 }}</span>
+        <span class="stat-label">Մ. լռ. հավ.</span>
+        <span class="stat-value">{{ mean_default|floatformat:4 }}</span>
+    </div>
+    <div class="stat-item">
+        <span class="stat-label">Վարկերի քան.</span>
+        <span class="stat-value">{{ applications|length }}</span>
     </div>
 </div>
 {% endif %}
+
 <div class="table-container">
     <table>
         <thead>
@@ -30,6 +48,7 @@
                 <th>Գրավի Տեսակ</th>
                 <th>Երաշխավոր</th>
                 <th>Դեֆոլտի հավանականություն</th>
+                <th>Ակн. շахույth (֏)</th>
                 <th></th>
             </tr>
         </thead>
@@ -48,38 +67,19 @@
                 <td>{{ application.get_mortgage_type_display_label }}</td>
                 <td>{% if application.has_guarantor %}Այո{% else %}Ոչ{% endif %}</td>
                 <td>{{ application.prob_default|floatformat:10 }}</td>
-                <td><a href="{% url 'delete_application' application.pk %}" class="button">Ջնջել</a></td>
+                <td>{{ application.expected_profit|floatformat:2 }} ֏</td>
+                <td><a href="{% url 'remove_from_portfolio' application.pk %}" class="button">Ձնջել</a></td>
             </tr>
+            {% empty %}
+            <tr><td colspan="14" style="text-align:center;">Պորտֆելն դատարկ է</td></tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
-{% if page_type == 'pending' %}
+
 <div class="first">
-    <form method="POST" action="{% url 'process_applications' %}" style="display:inline">
-        {% csrf_token %}
-        <input type="submit" value="Մշակել հայտերը" class="button">
-    </form>
+    <a href="{% url 'accepted_applications' %}" class="button">← Բավարարված հայտեր</a>
     <a href="{% url 'home' %}" class="button">Գլխավոր էջ</a>
 </div>
-{% elif page_type == 'accepted' %}
-{% if budget_error %}
-<div style="background:#ffe0e0;border:1px solid #f00;border-radius:6px;padding:0.75rem 1.2rem;margin:1rem 0;color:#c00;font-weight:bold;">
-    Բանկի Բյուջեն ({{ budget_value }} ֏) բառառական չև հայտլերիչ ոչ մի հայտի վարկի արժեքին։
-</div>
-{% endif %}
-<div class="first">
-    <form method="POST" action="{% url 'optimal_portfolio' %}" style="display:inline;display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
-        {% csrf_token %}
-        <input type="number" name="budget" placeholder="Բյուջե (֏)" min="1" required
-               style="padding:0.45rem 0.7rem;font-size:0.95rem;border:1px solid #ccc;border-radius:4px;width:160px;">
-        <input type="submit" value="Օպտիմալ Պորտֆել →" class="button">
-    </form>
-    <a href="{% url 'home' %}" class="button">Գլխավոր էջ</a>
-</div>
-{% else %}
-<div class="first">
-    <a href="{% url 'home' %}" class="button">Գլխավոր էջ</a>
-</div>
-{% endif %}
 {% endblock %}
+

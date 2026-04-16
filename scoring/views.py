@@ -1,6 +1,7 @@
 import pickle
 import pandas as pd
 from django.shortcuts import render, redirect
+from django.urls import reverse
 from django.db.models import Sum, Avg
 from .models import Application, MaritalStatus, EducationLevel, EmploymentType
 from django.conf import settings
@@ -55,25 +56,34 @@ def predict_default(application):
     prob_default = get_model().predict_proba(df)[0][1]
     prob_default = max(1e-9, min(0.99, prob_default))
     return prob_default
-def process_pending_applications(available_budget):
-    """Process all pending applications against the user-supplied budget."""
+def process_pending_applications():
+    """Accept/reject pending applications based solely on default probability threshold."""
     pending_applications = Application.objects.filter(status=Application.ApplicationStatus.PENDING)
     if not pending_applications.exists():
         return
-    sorted_applications = sorted(
-        pending_applications,
+    for app in pending_applications:
+        if app.prob_default is not None and app.prob_default >= settings.MAX_DEFAULT_RATE:
+            app.status = Application.ApplicationStatus.REJECTED
+        else:
+            app.status = Application.ApplicationStatus.ACCEPTED
+        app.save()
+def build_optimal_portfolio(available_budget):
+    """Greedy selection of accepted applications by expected_profit within budget."""
+    accepted_applications = Application.objects.filter(
+        status=Application.ApplicationStatus.ACCEPTED
+    )
+    sorted_apps = sorted(
+        accepted_applications,
         key=lambda app: app.expected_profit if app.expected_profit is not None else 0,
         reverse=True
     )
-    for app in sorted_applications:
-        if app.prob_default is not None and app.prob_default >= settings.MAX_DEFAULT_RATE:
-            app.status = Application.ApplicationStatus.REJECTED
-        elif app.loan_amount <= available_budget and (app.expected_profit or 0) > 0:
-            app.status = Application.ApplicationStatus.ACCEPTED
-            available_budget -= app.loan_amount
-        else:
-            app.status = Application.ApplicationStatus.REJECTED
-        app.save()
+    selected = []
+    remaining = available_budget
+    for app in sorted_apps:
+        if app.loan_amount <= remaining and (app.expected_profit or 0) > 0:
+            selected.append(app)
+            remaining -= app.loan_amount
+    return selected, available_budget - remaining
 
 
 def home(request):
@@ -147,12 +157,16 @@ def accepted_applications(request):
     applications = Application.objects.filter(status=Application.ApplicationStatus.ACCEPTED)
     total_profit = applications.aggregate(Sum('expected_profit'))['expected_profit__sum'] or 0
     mean_default = applications.aggregate(Avg('prob_default'))['prob_default__avg'] or 0
+    budget_error = request.GET.get('budget_error')
+    budget_value = request.GET.get('budget', '')
     return render(request, 'applications.html', {
         'applications': applications,
-        'title': 'Բավարարված հայտեր',
+        'title': 'Բавараrvats Нayterə',
         'page_type': 'accepted',
         'total_profit': total_profit,
         'mean_default': mean_default,
+        'budget_error': budget_error,
+        'budget_value': budget_value,
     })
 def rejected_applications(request):
     applications = Application.objects.filter(status=Application.ApplicationStatus.REJECTED)
@@ -169,16 +183,58 @@ def pending_applications(request):
         'page_type': 'pending',
     })
 def process_applications(request):
-    """Manually triggered: process pending apps with user-supplied budget."""
+    """Manually triggered: accept/reject pending apps based on default probability."""
+    if request.method == 'POST':
+        process_pending_applications()
+    return redirect('pending_applications')
+def optimal_portfolio(request):
+    """Show optimal portfolio. POST from accepted page to compute; GET to display from session."""
     if request.method == 'POST':
         try:
-            available_budget = int(request.POST['budget'])
-            if available_budget <= 0:
+            budget = int(request.POST['budget'])
+            if budget <= 0:
                 raise ValueError('Budget must be positive')
-            process_pending_applications(available_budget)
+            selected, total_used = build_optimal_portfolio(budget)
+            if not selected:
+                # Budget too small — go back to accepted page with error
+                url = reverse('accepted_applications') + f'?budget_error=1&budget={budget}'
+                return redirect(url)
+            # Move selected apps from ACCEPTED → PORTFOLIO status
+            for app in selected:
+                app.status = Application.ApplicationStatus.PORTFOLIO
+                app.save()
+            request.session['portfolio_budget'] = budget
+            request.session['portfolio_used'] = total_used
         except (ValueError, KeyError):
             pass
-    return redirect('pending_applications')
+        return redirect('optimal_portfolio')
+
+    # GET: display portfolio (from PORTFOLIO status in DB, supplemented by session stats)
+    portfolio_ids = request.session.get('portfolio_ids', [])
+    budget = request.session.get('portfolio_budget', 0)
+    total_used = request.session.get('portfolio_used', 0)
+    applications = list(Application.objects.filter(status=Application.ApplicationStatus.PORTFOLIO))
+    total_profit = sum(a.expected_profit or 0 for a in applications)
+    mean_default = sum(a.prob_default or 0 for a in applications) / len(applications) if applications else 0
+    return render(request, 'portfolio.html', {
+        'applications': applications,
+        'budget': budget,
+        'total_used': total_used,
+        'remaining_budget': max(0, budget - total_used),
+        'total_profit': total_profit,
+        'mean_default': mean_default,
+    })
+def remove_from_portfolio(request, pk):
+    """Move an application back from Portfolio → Accepted status."""
+    try:
+        application = Application.objects.get(pk=pk, status=Application.ApplicationStatus.PORTFOLIO)
+        application.status = Application.ApplicationStatus.ACCEPTED
+        application.save()
+    except Application.DoesNotExist:
+        pass
+    return redirect('optimal_portfolio')
+
+
 def delete_application(request, pk):
     try:
         application = Application.objects.get(pk=pk)
