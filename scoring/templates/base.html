@@ -5,11 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Credit Scoring{% endblock %}</title>
-    <link rel="stylesheet" href="{% static 'style.css' %}?v=1.1">
+    <link rel="stylesheet" href="{% static 'style.css' %}?v=1.2">
 </head>
 <body>
     <a href="{% url 'home' %}" style="text-decoration:none;color:inherit"><div id="head">Վարկունակության գնահատում</div></a>
-    <div class="block">
+    <div class="block {% block block_class %}{% endblock %}">
         {% block content %}{% endblock %}
     </div>
 </body>

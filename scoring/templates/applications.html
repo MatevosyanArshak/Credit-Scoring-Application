@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% block title %}{{ title }}{% endblock %}
+{% block block_class %}block--wide{% endblock %}
 {% block content %}
 <div class="title">{{ title }}</div>
 {% if page_type == 'accepted' %}
@@ -24,6 +25,7 @@
                 <th>Վարկառուի Տարիք</th>
                 <th>Վարկի Արժեք</th>
                 <th>Ամսական Եկամուտ</th>
+                <th>Ամսական Ծախսեր</th>
                 <th>Վարկային Պատմություն</th>
                 <th>Վարկի Տեսակ</th>
                 <th>Ժամկետ</th>
@@ -42,6 +44,7 @@
                 <td>{{ application.age }}</td>
                 <td>{{ application.loan_amount }}</td>
                 <td>{{ application.monthly_income }}</td>
+                <td>{{ application.monthly_expenses }}</td>
                 <td>{{ application.get_credit_history_display_label }}</td>
                 <td>{{ application.get_loan_type_display_label }}</td>
                 <td>{{ application.get_loan_term_display_label }}</td>

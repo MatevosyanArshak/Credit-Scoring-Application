@@ -28,8 +28,20 @@ body {
     border-radius: 12px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
     width: 100%;
-    max-width: 900px; /* Increased max-width for larger screens */
+    max-width: 900px;
     box-sizing: border-box;
+}
+
+/* Full-width variant for table pages */
+.block.block--wide {
+    max-width: none;
+    width: 100%;
+    padding: 30px 24px;
+}
+
+body:has(.block--wide) {
+    padding: 20px 12px;
+    align-items: stretch;
 }
 
 /* Form Styles */

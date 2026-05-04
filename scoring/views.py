@@ -55,6 +55,13 @@ def predict_default(application):
     # avoid exact 1.0 but preserve low-risk differentiation.
     prob_default = get_model().predict_proba(df)[0][1]
     prob_default = max(1e-9, min(0.99, prob_default))
+
+    # Hard rule: applicants spending more than they earn are always high risk,
+    # regardless of what the model predicts.
+    expense_to_income = application.monthly_expenses / safe_income
+    if expense_to_income > 1.0:
+        prob_default = max(prob_default, 0.80)
+
     return prob_default
 def process_pending_applications():
     """Accept/reject pending applications based solely on default probability threshold."""
