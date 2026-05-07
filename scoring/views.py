@@ -168,7 +168,7 @@ def accepted_applications(request):
     budget_value = request.GET.get('budget', '')
     return render(request, 'applications.html', {
         'applications': applications,
-        'title': 'Բавараrvats Нayterə',
+        'title': 'Բավարարված հայտեր',
         'page_type': 'accepted',
         'total_profit': total_profit,
         'mean_default': mean_default,
