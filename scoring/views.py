@@ -148,7 +148,7 @@ def application_form(request):
             interest_rate = settings.BASE_INTEREST_RATE + (prob_default * settings.RISK_PREMIUM_FACTOR)
             loan_term_years = settings.LOAN_TERM_YEARS.get(application.loan_term, 1.5)
             expected_return = application.loan_amount * interest_rate * loan_term_years
-            expected_loss = application.loan_amount * prob_default
+            expected_loss = application.loan_amount * prob_default * settings.LOSS_GIVEN_DEFAULT
             expected_profit = expected_return - expected_loss
             application.expected_profit = expected_profit
             application.save()

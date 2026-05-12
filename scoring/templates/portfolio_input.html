@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}Օպտիմալ Պորտֆել{% endblock %}
+{% block content %}
+<h2 class="page-title">Օպտիմալ Պորտֆել</h2>
+{% if error %}
+<p style="color:red;text-align:center;">{{ error }}</p>
+{% endif %}
+<div class="modal-box" style="max-width:400px;margin:3rem auto;">
+    <div class="modal-title">Մուտքագրեք Բանկի բյուջեն</div>
+    <form method="POST" action="{% url 'optimal_portfolio' %}">
+        {% csrf_token %}
+        <label for="portfolio_budget">Բյուջե (֏)</label>
+        <input type="number" id="portfolio_budget" name="budget" min="1" required
+               style="width:100%;padding:0.5rem;margin:0.5rem 0 1rem 0;font-size:1rem;">
+        <div class="modal-buttons">
+            <input type="submit" value="Հաստատել" class="button">
+            <a href="{% url 'accepted_applications' %}" class="button">Չեղարկել</a>
+        </div>
+    </form>
+</div>
+<div class="first" style="margin-top:1rem;">
+    <a href="{% url 'accepted_applications' %}" class="button">← Բավարարված հայտեր</a>
+    <a href="{% url 'home' %}" class="button">Գլխավոր էջ</a>
+</div>
+{% endblock %}

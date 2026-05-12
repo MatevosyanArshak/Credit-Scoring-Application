@@ -128,6 +128,7 @@ BANK_BUDGET = 20000000
 BASE_INTEREST_RATE = 0.05   # 5% annual interest rate
 RISK_PREMIUM_FACTOR = 0.20  # extra rate added per unit of default probability
 MAX_DEFAULT_RATE = 0.30     # hard cap: reject any application with prob_default >= this
+LOSS_GIVEN_DEFAULT = 0.40   # fraction of loan actually lost when borrower defaults (LGD)
 
 # Maps loan_term DB values to approximate years (used for expected profit calculation)
 LOAN_TERM_YEARS = {
